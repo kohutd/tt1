@@ -2,19 +2,18 @@
 
 namespace App\Services\Geocoding;
 
-use GuzzleHttp\Client;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class GoogleGeocodingService implements GeocodingService
 {
-    protected Client $client;
-
-    public function __construct()
+    public function call(string $address): Response
     {
-        $this->client = new Client([
-            "base_uri" => "http://maps.googleapis.com/maps/api/"
-        ]);
+        return Http::get("https://maps.googleapis.com/maps/api/geocode/json", [
+            "address" => $address,
+            "key" => config("geocoding.google_token")
+        ])->throw();
     }
 
     public function lookup(string $address): Coordinates
@@ -26,10 +25,7 @@ class GoogleGeocodingService implements GeocodingService
             return $coordinates;
         }
 
-        $response = Http::get("https://maps.googleapis.com/maps/api/geocode/json", [
-            "address" => $address,
-            "key" => "AIzaSyA931_QNKEcaIFmRs3pGt9sXgW58SQxHHo"
-        ])->throw();
+        $response = $this->call($address);
 
         $defaultCoordinates = new Coordinates("geo", 0, 0);
 

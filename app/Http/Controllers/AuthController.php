@@ -30,15 +30,15 @@ class AuthController
     public function register(Request $request): JsonResponse
     {
         $validatedClient = $request->validate([
-            'name' => 'required',
+            'name' => 'required|max:100',
             'address1' => 'required',
             'address2' => 'nullable',
-            'city' => 'required',
-            'state' => 'required',
-            'country' => 'required',
-            'zipCode' => 'required',
-            'phoneNo1' => 'required',
-            'phoneNo2' => 'required',
+            'city' => 'required|max:100',
+            'state' => 'required|max:100',
+            'country' => 'required|max:100',
+            'zipCode' => 'required|max:20',
+            'phoneNo1' => 'required|max:20',
+            'phoneNo2' => 'required|max:20',
             'user' => 'required|array'
         ]);
 
@@ -55,12 +55,12 @@ class AuthController
         $validatedClient['end_validity'] = Carbon::now()->addDays(15);
 
         $validatedUser = Validator::make($validatedClient['user'], [
-            'firstName' => 'required',
-            'lastName' => 'required',
-            'email' => 'required|unique:users',
-            'password' => 'required',
-            'passwordConfirmation' => 'required|same:password',
-            'phone' => 'required',
+            'firstName' => 'required|max:50',
+            'lastName' => 'required|max:50',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|max:256',
+            'passwordConfirmation' => 'required|max:256|same:password',
+            'phone' => 'required|max:20',
         ])->validate();
 
         $client = $this->clientRepository->create($validatedClient);
