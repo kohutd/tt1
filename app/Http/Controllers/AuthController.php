@@ -6,6 +6,7 @@ use App\Http\ApiResponse;
 use App\Http\Resources\AccountResource;
 use App\Repositories\ClientsRepository;
 use App\Repositories\UsersRepository;
+use App\Services\Geocoding\Coordinates;
 use App\Services\Geocoding\GeocodingService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -42,18 +43,28 @@ class AuthController
             'user' => 'required|array'
         ]);
 
-        $geoInfo = $this->geocodingService->lookup(
-            "{$validatedClient['address1']}, {$validatedClient['city']}, {$validatedClient['state']}, {$validatedClient['country']}"
+        $validatedClient = $this->getValidatedClient($validatedClient, $this->getGeoInfo($validatedClient));
+        $validatedUser = $this->validateUser($validatedClient['user']);
+
+        $client = $this->clientRepository->create($validatedClient);
+        $user = $this->userRepository->create($validatedUser, $client);
+
+        return ApiResponse::success([
+            "client" => AccountResource::make($client),
+            "token" => $user->createToken('register-token')->plainTextToken
+        ]);
+    }
+
+    private function getGeoInfo(array $validatedClient): Coordinates
+    {
+        return $this->geocodingService->lookup(
+            $validatedClient['address1'] . ', ' . $validatedClient['city'] . ', ' . $validatedClient['state'] . ', ' . $validatedClient['country']
         );
+    }
 
-        $validatedClient['latitude'] = $geoInfo->latitude;
-        $validatedClient['longitude'] = $geoInfo->longitude;
-
-        $validatedClient['status'] = 'Active';
-        $validatedClient['start_validity'] = Carbon::now();
-        $validatedClient['end_validity'] = Carbon::now()->addDays(15);
-
-        $validatedUser = Validator::make($validatedClient['user'], [
+    private function validateUser(array $data): array
+    {
+        return Validator::make($data, [
             'firstName' => 'required|max:50',
             'lastName' => 'required|max:50',
             'email' => 'required|email|unique:users',
@@ -61,14 +72,16 @@ class AuthController
             'passwordConfirmation' => 'required|max:256|same:password',
             'phone' => 'required|max:20',
         ])->validate();
+    }
 
-        $client = $this->clientRepository->create($validatedClient);
+    private function getValidatedClient(array $validatedClient, Coordinates $geoInfo): array
+    {
+        $validatedClient['latitude'] = $geoInfo->latitude;
+        $validatedClient['longitude'] = $geoInfo->longitude;
+        $validatedClient['status'] = 'Active';
+        $validatedClient['start_validity'] = Carbon::now();
+        $validatedClient['end_validity'] = Carbon::now()->addDays(15);
 
-        $user = $this->userRepository->create($validatedUser, $client);
-
-        return ApiResponse::success([
-            "client" => AccountResource::make($client),
-            "token" => $user->createToken('register-token')->plainTextToken
-        ]);
+        return $validatedClient;
     }
 }
