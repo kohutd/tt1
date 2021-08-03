@@ -8,12 +8,7 @@ class AccountTest extends TestCase
 {
     public function test_account()
     {
-        $perPage = 10;
-
-        $response = $this->get('/api/v1/account', [
-            'page' => 1,
-            'perPage' => $perPage,
-        ]);
+        $response = $this->get('/api/v1/account');
 
         $response->assertJsonStructure([
             "data" => [
@@ -34,12 +29,24 @@ class AccountTest extends TestCase
                     "endValidity",
                     "status",
                 ]
+            ],
+            "links" => [
+                "path",
+                "firstPageUrl",
+                "lastPageUrl",
+                "nextPageUrl",
+                "prevPageUrl",
+            ],
+            "meta" => [
+                "currentPage",
+                "from",
+                "lastPage",
+                "perPage",
+                "to",
+                "total",
+                "count",
             ]
         ]);
-
-        $data = $response->json("data");
-
-        $this->assertLessThanOrEqual(sizeof($data), $perPage);
 
         $response->assertStatus(200);
     }
