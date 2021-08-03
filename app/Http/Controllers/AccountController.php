@@ -41,35 +41,15 @@ class AccountController extends Controller
         $perPage = $request->get("perPage", 10);
         $order = $request->get("order", "desc");
         $orderBy = $request->get("orderBy", "id");
-        if (!empty($this->columnsMap[$orderBy])) {
-            $orderBy = $this->columnsMap[$orderBy];
-        } else {
-            abort(400, "Invalid column to order.");
-        }
-
         $filter = $request->get("filter");
 
-        $filters = [];
-
-        if ($filter) {
-            $filter = explode(",", $filter);
-
-            $column = $filter[0];
-            if (!empty($this->columnsMap[$column])) {
-                $column = $this->columnsMap[$column];
-            } else {
-                abort(400, "Invalid column to filter.");
-            }
-
-            $value = $filter[1];
-
-            $filters = [[$column, "=", $value]];
-        }
+        $orderByColumn = $this->mapClientFieldToColumn($orderBy);
+        $filters = $this->parseFilterField($filter);
 
         $pageResult = $this->clientsRepository->getPage(
             $page,
             $perPage,
-            $orderBy,
+            $orderByColumn,
             $order,
             $filters
         );
@@ -78,5 +58,32 @@ class AccountController extends Controller
             $pageResult,
             AccountResource::class
         );
+    }
+
+    protected function mapClientFieldToColumn(string $field): string
+    {
+        if (!empty($this->columnsMap[$field])) {
+            return $this->columnsMap[$field];
+        } else {
+            abort(400, "Invalid client field: $field.");
+        }
+    }
+
+    protected function parseFilterField(?string $filterItems): array
+    {
+        $filters = [];
+
+        if ($filterItems) {
+            $filterItems = explode(",", $filterItems);
+
+            $field = $filterItems[0];
+            $value = $filterItems[1];
+
+            $column = $this->mapClientFieldToColumn($field);
+
+            $filters = [[$column, "=", $value]];
+        }
+
+        return $filters;
     }
 }
