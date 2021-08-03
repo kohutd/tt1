@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 class AccountController extends Controller
 {
     protected array $columnsMap = [
-        "id" => "zip",
+        "id" => "id",
         "name" => "client_name",
         "address1" => "address1",
         "address2" => "address2",
@@ -41,6 +41,11 @@ class AccountController extends Controller
         $perPage = $request->get("perPage", 10);
         $order = $request->get("order", "desc");
         $orderBy = $request->get("orderBy", "id");
+        if (!empty($this->columnsMap[$orderBy])) {
+            $orderBy = $this->columnsMap[$orderBy];
+        } else {
+            abort(400, "Invalid column to order.");
+        }
 
         $filter = $request->get("filter");
 
