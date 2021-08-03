@@ -1,5 +1,7 @@
 version: '2'
-
+networks:
+    app-tier:
+        driver: bridge
 services:
     tt1:
         tty: true
@@ -13,4 +15,14 @@ services:
             - 3000:3000
         volumes:
             - ./:/app
+        networks:
+            - app-tier
+        depends_on:
+            - redis
+    redis:
+        image: redis:latest
+        environment:
+            - ALLOW_EMPTY_PASSWORD=yes
+        networks:
+            - app-tier
         # privileged: true # Privileged mode could be required to run this container under Windows
