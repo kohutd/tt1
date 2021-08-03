@@ -41,7 +41,7 @@ class RegisterTest extends TestCase
         $response->assertJsonStructure([
             "data" => [
                 "token",
-                "user" => [
+                "client" => [
                     "id",
                     "name",
                     "address1",

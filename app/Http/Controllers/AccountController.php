@@ -4,17 +4,35 @@ namespace App\Http\Controllers;
 
 use App\Http\ApiResponse;
 use App\Http\Resources\AccountResource;
-use App\Repositories\UsersRepository;
+use App\Repositories\ClientsRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AccountController extends Controller
 {
-    protected UsersRepository $usersRepository;
+    protected array $columnsMap = [
+        "id" => "zip",
+        "name" => "client_name",
+        "address1" => "address1",
+        "address2" => "address2",
+        "city" => "city",
+        "state" => "state",
+        "country" => "country",
+        "zipCode" => "zip",
+        "latitude" => "latitude",
+        "longitude" => "longitude",
+        "phoneNo1" => "phone_no1",
+        "phoneNo2" => "phone_no2",
+        "startValidity" => "start_validity",
+        "endValidity" => "end_validity",
+        "status" => "status",
+    ];
 
-    public function __construct(UsersRepository $usersRepository)
+    protected ClientsRepository $clientsRepository;
+
+    public function __construct(ClientsRepository $clientsRepository)
     {
-        $this->usersRepository = $usersRepository;
+        $this->clientsRepository = $clientsRepository;
     }
 
     public function getAll(Request $request): JsonResponse
@@ -31,10 +49,19 @@ class AccountController extends Controller
         if ($filter) {
             $filter = explode(",", $filter);
 
-            $filters = [[$filter[0], "=", $filter[1]]];
+            $column = $filter[0];
+            if (!empty($this->columnsMap[$column])) {
+                $column = $this->columnsMap[$column];
+            } else {
+                abort(400, "Invalid column to filter.");
+            }
+
+            $value = $filter[1];
+
+            $filters = [[$column, "=", $value]];
         }
 
-        $pageResult = $this->usersRepository->getPage(
+        $pageResult = $this->clientsRepository->getPage(
             $page,
             $perPage,
             $orderBy,

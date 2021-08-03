@@ -68,7 +68,7 @@ class AuthController
         $user = $this->userRepository->create($validatedUser, $client);
 
         return ApiResponse::success([
-            "user" => AccountResource::make($user),
+            "client" => AccountResource::make($client),
             "token" => $user->createToken('register-token')->plainTextToken
         ]);
     }
