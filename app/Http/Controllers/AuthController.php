@@ -43,8 +43,7 @@ class AuthController
         ]);
 
         $geoInfo = $this->geocodingService->lookup(
-        // address, city, state, country
-            $validatedClient['address1'] . ', ' . $validatedClient['city'] . ', ' . $validatedClient['state'] . ', ' . $validatedClient['country']
+            "{$validatedClient['address1']}, {$validatedClient['city']}, {$validatedClient['state']}, {$validatedClient['country']}"
         );
 
         $validatedClient['latitude'] = $geoInfo->latitude;
